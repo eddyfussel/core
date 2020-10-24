@@ -7,7 +7,9 @@ from homeassistant.components import (
     cover,
     fan,
     group,
+    humidifier,
     input_boolean,
+    input_select,
     light,
     lock,
     media_player,
@@ -43,7 +45,9 @@ DEFAULT_EXPOSED_DOMAINS = [
     "cover",
     "fan",
     "group",
+    "humidifier",
     "input_boolean",
+    "input_select",
     "light",
     "media_player",
     "scene",
@@ -73,6 +77,10 @@ TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
 TYPE_TV = f"{PREFIX_TYPES}TV"
 TYPE_SPEAKER = f"{PREFIX_TYPES}SPEAKER"
 TYPE_ALARM = f"{PREFIX_TYPES}SECURITYSYSTEM"
+TYPE_SETTOP = f"{PREFIX_TYPES}SETTOP"
+TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
+TYPE_DEHUMIDIFIER = f"{PREFIX_TYPES}DEHUMIDIFIER"
+TYPE_RECEIVER = f"{PREFIX_TYPES}AUDIO_VIDEO_RECEIVER"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
@@ -90,6 +98,7 @@ ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = "protocolError"
 ERR_UNKNOWN_ERROR = "unknownError"
 ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
+ERR_UNSUPPORTED_INPUT = "unsupportedInput"
 
 ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_ARMED = "alreadyArmed"
@@ -111,10 +120,12 @@ DOMAIN_TO_GOOGLE_TYPES = {
     cover.DOMAIN: TYPE_BLINDS,
     fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
+    humidifier.DOMAIN: TYPE_HUMIDIFIER,
     input_boolean.DOMAIN: TYPE_SWITCH,
+    input_select.DOMAIN: TYPE_SENSOR,
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_LOCK,
-    media_player.DOMAIN: TYPE_SWITCH,
+    media_player.DOMAIN: TYPE_SETTOP,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
@@ -134,8 +145,12 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
+    (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
+    (media_player.DOMAIN, media_player.DEVICE_CLASS_RECEIVER): TYPE_RECEIVER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
+    (humidifier.DOMAIN, humidifier.DEVICE_CLASS_HUMIDIFIER): TYPE_HUMIDIFIER,
+    (humidifier.DOMAIN, humidifier.DEVICE_CLASS_DEHUMIDIFIER): TYPE_DEHUMIDIFIER,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"

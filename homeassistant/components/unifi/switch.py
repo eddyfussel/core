@@ -17,17 +17,13 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 BLOCK_SWITCH = "block"
 POE_SWITCH = "poe"
 
 CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Component doesn't support configuration through configuration.yaml."""
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -229,7 +225,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         try:
             return self.device.ports[self.client.sw_port]
         except (AttributeError, KeyError, TypeError):
-            LOGGER.warning(
+            _LOGGER.warning(
                 "Entity %s reports faulty device %s or port %s",
                 self.entity_id,
                 self.client.sw_mac,
@@ -239,7 +235,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_poe_clients:
-            await self.async_remove()
+            await self.remove_item({self.client.mac})
 
 
 class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
@@ -287,4 +283,4 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if self.client.mac not in self.controller.option_block_clients:
-            await self.async_remove()
+            await self.remove_item({self.client.mac})

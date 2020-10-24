@@ -4,15 +4,16 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
+            "cannot_connect": "Feeler beim verbannen",
             "connection_error": "Feeler beim verbannen mam BSB-Lan Apparat."
         },
         "flow_title": "BSB-LAN: {name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Numm oder IP Adresse",
+                    "host": "Host",
                     "passkey": "Passkey Zeechefolleg",
-                    "port": "Port Nummer"
+                    "port": "Port"
                 },
                 "description": "BSB-Lan Apparat ariichten fir d'Integratioun mam Home Assistant.",
                 "title": "Mam BSB-Lan Apparat verbannen"

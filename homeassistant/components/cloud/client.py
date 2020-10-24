@@ -1,6 +1,5 @@
 """Interface implementation for cloud client."""
 import asyncio
-import logging
 from pathlib import Path
 from typing import Any, Dict
 
@@ -19,10 +18,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.aiohttp import MockRequest
 
 from . import alexa_config, google_config, utils
-from .const import DISPATCHER_REMOTE_UPDATE
+from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CloudClient(Interface):
@@ -182,6 +179,7 @@ class CloudClient(Interface):
             headers=payload["headers"],
             method=payload["method"],
             query_string=payload["query"],
+            mock_source=DOMAIN,
         )
 
         response = await self._hass.components.webhook.async_handle_webhook(

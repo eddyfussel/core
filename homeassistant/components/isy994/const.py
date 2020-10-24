@@ -44,7 +44,10 @@ from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
+    CURRENCY_CENT,
+    CURRENCY_DOLLAR,
     DEGREE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
@@ -54,10 +57,15 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     MASS_POUNDS,
+    PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_MBAR,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     SPEED_KILOMETERS_PER_HOUR,
@@ -83,9 +91,10 @@ from homeassistant.const import (
     TIME_MONTHS,
     TIME_SECONDS,
     TIME_YEARS,
-    UNIT_PERCENTAGE,
     UV_INDEX,
     VOLT,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
@@ -168,13 +177,30 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 UDN_UUID_PREFIX = "uuid:"
 ISY_URL_POSTFIX = "/desc"
 
+# Special Units of Measure
+UOM_ISYV4_DEGREES = "degrees"
+UOM_ISYV4_NONE = "n/a"
+
+UOM_ISY_CELSIUS = 1
+UOM_ISY_FAHRENHEIT = 2
+
+UOM_8_BIT_RANGE = "100"
+UOM_BARRIER = "97"
+UOM_DOUBLE_TEMP = "101"
+UOM_HVAC_ACTIONS = "66"
+UOM_HVAC_MODE_GENERIC = "67"
+UOM_HVAC_MODE_INSTEON = "98"
+UOM_FAN_MODES = "99"
+UOM_INDEX = "25"
+UOM_ON_OFF = "2"
+
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
 NODE_FILTERS = {
     BINARY_SENSOR: {
-        FILTER_UOM: [],
+        FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
             "BinaryAlarm",
@@ -215,7 +241,7 @@ NODE_FILTERS = {
             "RemoteLinc2_ADV",
         ],
         FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
-        FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 185)))),
+        FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 186)))),
     },
     LOCK: {
         FILTER_UOM: ["11"],
@@ -232,10 +258,10 @@ NODE_FILTERS = {
         FILTER_ZWAVE_CAT: [],
     },
     COVER: {
-        FILTER_UOM: ["97"],
+        FILTER_UOM: [UOM_BARRIER],
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
-        FILTER_NODE_DEF_ID: [],
-        FILTER_INSTEON_TYPE: [],
+        FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
+        FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
         FILTER_ZWAVE_CAT: [],
     },
     LIGHT: {
@@ -256,7 +282,7 @@ NODE_FILTERS = {
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
     SWITCH: {
-        FILTER_UOM: ["2", "78"],
+        FILTER_UOM: ["78"],
         FILTER_STATES: ["on", "off"],
         FILTER_NODE_DEF_ID: [
             "AlertModuleArmed",
@@ -286,7 +312,7 @@ NODE_FILTERS = {
         FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
     },
     CLIMATE: {
-        FILTER_UOM: ["2"],
+        FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: ["heating", "cooling", "idle", "fan_only", "off"],
         FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],
         FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
@@ -294,28 +320,15 @@ NODE_FILTERS = {
     },
 }
 
-UOM_ISYV4_DEGREES = "degrees"
-UOM_ISYV4_NONE = "n/a"
-
-UOM_ISY_CELSIUS = 1
-UOM_ISY_FAHRENHEIT = 2
-
-UOM_DOUBLE_TEMP = "101"
-UOM_HVAC_ACTIONS = "66"
-UOM_HVAC_MODE_GENERIC = "67"
-UOM_HVAC_MODE_INSTEON = "98"
-UOM_FAN_MODES = "99"
-UOM_INDEX = "25"
-UOM_ON_OFF = "2"
-
 UOM_FRIENDLY_NAME = {
     "1": "A",
+    UOM_ON_OFF: "",  # Binary, no unit
     "3": f"btu/{TIME_HOURS}",
     "4": TEMP_CELSIUS,
     "5": LENGTH_CENTIMETERS,
-    "6": "ft³",
-    "7": f"ft³/{TIME_MINUTES}",
-    "8": "m³",
+    "6": VOLUME_CUBIC_FEET,
+    "7": f"{VOLUME_CUBIC_FEET}/{TIME_MINUTES}",
+    "8": f"{VOLUME_CUBIC_METERS}",
     "9": TIME_DAYS,
     "10": TIME_DAYS,
     "12": "dB",
@@ -341,22 +354,22 @@ UOM_FRIENDLY_NAME = {
     "33": ENERGY_KILO_WATT_HOUR,
     "34": "liedu",
     "35": VOLUME_LITERS,
-    "36": "lx",
+    "36": LIGHT_LUX,
     "37": "mercalli",
     "38": LENGTH_METERS,
-    "39": f"{LENGTH_METERS}³/{TIME_HOURS}",
+    "39": f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
     "40": SPEED_METERS_PER_SECOND,
     "41": "mA",
     "42": TIME_MILLISECONDS,
     "43": "mV",
     "44": TIME_MINUTES,
     "45": TIME_MINUTES,
-    "46": f"mm/{TIME_HOURS}",
+    "46": f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
     "47": TIME_MONTHS,
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
     "50": "Ω",
-    "51": UNIT_PERCENTAGE,
+    "51": PERCENTAGE,
     "52": MASS_POUNDS,
     "53": "pf",
     "54": CONCENTRATION_PARTS_PER_MILLION,
@@ -374,27 +387,27 @@ UOM_FRIENDLY_NAME = {
     "71": UV_INDEX,
     "72": VOLT,
     "73": POWER_WATT,
-    "74": f"{POWER_WATT}/{LENGTH_METERS}²",
+    "74": f"{POWER_WATT}/{AREA_SQUARE_METERS}",
     "75": "weekday",
     "76": DEGREE,
     "77": TIME_YEARS,
-    "82": "mm",
+    "82": LENGTH_MILLIMETERS,
     "83": LENGTH_KILOMETERS,
     "85": "Ω",
     "86": "kΩ",
-    "87": f"{LENGTH_METERS}³/{LENGTH_METERS}³",
+    "87": f"{VOLUME_CUBIC_METERS}/{VOLUME_CUBIC_METERS}",
     "88": "Water activity",
     "89": "RPM",
     "90": FREQUENCY_HERTZ,
     "91": DEGREE,
     "92": f"{DEGREE} South",
-    "100": "",  # Range 0-255, no unit.
+    UOM_8_BIT_RANGE: "",  # Range 0-255, no unit.
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
-    "103": "$",
-    "104": "¢",
+    "103": CURRENCY_DOLLAR,
+    "104": CURRENCY_CENT,
     "105": LENGTH_INCHES,
-    "106": f"mm/{TIME_DAYS}",
+    "106": f"{LENGTH_MILLIMETERS}/{TIME_DAYS}",
     "107": "",  # raw 1-byte unsigned value
     "108": "",  # raw 2-byte unsigned value
     "109": "",  # raw 3-byte unsigned value
@@ -404,8 +417,8 @@ UOM_FRIENDLY_NAME = {
     "113": "",  # raw 3-byte signed value
     "114": "",  # raw 4-byte signed value
     "116": LENGTH_MILES,
-    "117": "mbar",
-    "118": "hPa",
+    "117": PRESSURE_MBAR,
+    "118": PRESSURE_HPA,
     "119": f"{POWER_WATT}{TIME_HOURS}",
     "120": f"{LENGTH_INCHES}/{TIME_DAYS}",
 }
@@ -556,7 +569,7 @@ UOM_TO_STATES = {
         3: "moderately polluted",
         4: "highly polluted",
     },
-    "97": {  # Barrier Status
+    UOM_BARRIER: {  # Barrier Status
         **{
             0: STATE_CLOSED,
             100: STATE_OPEN,

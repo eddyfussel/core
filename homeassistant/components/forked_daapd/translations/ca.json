@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "not_forked_daapd": "El dispositiu no \u00e9s un servidor de forked-daapd."
         },
         "error": {
-            "unknown_error": "Error desconegut.",
+            "forbidden": "No s'ha pogut connectar. Comprova els permisos de xarxa de forked-daapd.",
+            "unknown_error": "Error inesperat",
             "websocket_not_enabled": "El websocket de forked-daapd no est\u00e0 activat.",
             "wrong_host_or_port": "No s'ha pogut connectar, verifica l'amfitri\u00f3 i el port.",
             "wrong_password": "Contrasenya incorrecta.",
@@ -16,6 +17,7 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
+                    "name": "Sobrenom",
                     "password": "Contrasenya de l'API (deixa-ho en blanc si no t\u00e9 contrasenya)",
                     "port": "Port de l'API"
                 },

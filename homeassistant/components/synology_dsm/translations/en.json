@@ -1,14 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
+            "cannot_connect": "Failed to connect",
             "connection": "Connection error: please check your host, port & ssl",
+            "invalid_auth": "Invalid authentication",
             "login": "Login error: please check your username & password",
             "missing_data": "Missing data: please retry later or an other configuration",
             "otp_failed": "Two-step authentication failed, retry with a new pass code",
-            "unknown": "Unknown error: please check logs to get more details"
+            "unknown": "Unexpected error"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -20,10 +22,9 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM version",
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "Use SSL/TLS to connect to your NAS",
+                    "ssl": "Uses an SSL certificate",
                     "username": "Username"
                 },
                 "description": "Do you want to setup {name} ({host})?",
@@ -31,11 +32,10 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM version",
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "Use SSL/TLS to connect to your NAS",
+                    "ssl": "Uses an SSL certificate",
                     "username": "Username"
                 },
                 "title": "Synology DSM"
@@ -46,7 +46,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minutes between scans"
+                    "scan_interval": "Minutes between scans",
+                    "timeout": "Timeout (seconds)"
                 }
             }
         }

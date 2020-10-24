@@ -260,18 +260,49 @@ def test_time_period():
     """Test time_period validation."""
     schema = vol.Schema(cv.time_period)
 
-    options = (None, "", "hello:world", "12:", "12:34:56:78", {}, {"wrong_key": -10})
+    options = (
+        None,
+        "",
+        "hello:world",
+        "12:",
+        "12:34:56:78",
+        {},
+        {"wrong_key": -10},
+        "12.5:30",
+        "12:30.5",
+        "12.5:30:30",
+        "12:30.5:30",
+    )
     for value in options:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    options = ("8:20", "23:59", "-8:20", "-23:59:59", "-48:00", {"minutes": 5}, 1, "5")
-    for value in options:
-        schema(value)
-
-    assert timedelta(seconds=180) == schema("180")
-    assert timedelta(hours=23, minutes=59) == schema("23:59")
-    assert -1 * timedelta(hours=1, minutes=15) == schema("-1:15")
+    options = (
+        ("8:20", timedelta(hours=8, minutes=20)),
+        ("23:59", timedelta(hours=23, minutes=59)),
+        ("-8:20", -1 * timedelta(hours=8, minutes=20)),
+        ("-1:15", -1 * timedelta(hours=1, minutes=15)),
+        ("-23:59:59", -1 * timedelta(hours=23, minutes=59, seconds=59)),
+        ("-48:00", -1 * timedelta(days=2)),
+        ({"minutes": 5}, timedelta(minutes=5)),
+        (1, timedelta(seconds=1)),
+        ("5", timedelta(seconds=5)),
+        ("180", timedelta(seconds=180)),
+        ("00:08:20.5", timedelta(minutes=8, seconds=20, milliseconds=500)),
+        ("00:23:59.999", timedelta(minutes=23, seconds=59, milliseconds=999)),
+        ("-00:08:20.5", -1 * timedelta(minutes=8, seconds=20, milliseconds=500)),
+        (
+            "-12:59:59.999",
+            -1 * timedelta(hours=12, minutes=59, seconds=59, milliseconds=999),
+        ),
+        ({"milliseconds": 1.5}, timedelta(milliseconds=1, microseconds=500)),
+        ({"seconds": "1.5"}, timedelta(seconds=1, milliseconds=500)),
+        ({"minutes": "1.5"}, timedelta(minutes=1, seconds=30)),
+        ({"hours": -1.5}, -1 * timedelta(hours=1, minutes=30)),
+        ({"days": "-1.5"}, -1 * timedelta(days=1, hours=12)),
+    )
+    for value, result in options:
+        assert schema(value) == result
 
 
 def test_remove_falsy():
@@ -412,6 +443,29 @@ def test_template():
         schema(value)
 
 
+def test_dynamic_template():
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+    ):
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+    )
+    for value in options:
+        schema(value)
+
+
 def test_template_complex():
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)
@@ -517,6 +571,27 @@ def test_multi_select_in_serializer():
     }
 
 
+def test_boolean_in_serializer():
+    """Test boolean with custom_serializer."""
+    assert cv.custom_serializer(cv.boolean) == {
+        "type": "boolean",
+    }
+
+
+def test_string_in_serializer():
+    """Test string with custom_serializer."""
+    assert cv.custom_serializer(cv.string) == {
+        "type": "string",
+    }
+
+
+def test_positive_time_period_dict_in_serializer():
+    """Test positive_time_period_dict with custom_serializer."""
+    assert cv.custom_serializer(cv.positive_time_period_dict) == {
+        "type": "positive_time_period_dict",
+    }
+
+
 @pytest.fixture
 def schema():
     """Create a schema used for testing deprecation."""
@@ -548,8 +623,7 @@ def test_deprecated_with_no_optionals(caplog, schema):
         "homeassistant.helpers.config_validation",
     ]
     assert (
-        "The 'mars' option (with value 'True') is deprecated, "
-        "please remove it from your configuration"
+        "The 'mars' option is deprecated, please remove it from your configuration"
     ) in caplog.text
     assert test_data == output
 
@@ -582,8 +656,7 @@ def test_deprecated_with_replacement_key(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert (
-        "The 'mars' option (with value 'True') is deprecated, "
-        "please replace it with 'jupiter'"
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
     assert {"jupiter": True} == output
 
@@ -617,7 +690,7 @@ def test_deprecated_with_invalidation_version(caplog, schema, version):
     )
 
     message = (
-        "The 'mars' option (with value 'True') is deprecated, "
+        "The 'mars' option is deprecated, "
         "please remove it from your configuration. "
         "This option will become invalid in version 1.0.0"
     )
@@ -643,9 +716,9 @@ def test_deprecated_with_invalidation_version(caplog, schema, version):
     with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
     assert str(exc_info.value) == (
-        "The 'mars' option (with value 'True') is deprecated, "
-        "please remove it from your configuration. This option will "
-        "become invalid in version 0.1.0"
+        "The 'mars' option is deprecated, "
+        "please remove it from your configuration. This option became "
+        "invalid in version 0.1.0"
     )
 
 
@@ -671,7 +744,7 @@ def test_deprecated_with_replacement_key_and_invalidation_version(
     )
 
     warning = (
-        "The 'mars' option (with value 'True') is deprecated, "
+        "The 'mars' option is deprecated, "
         "please replace it with 'jupiter'. This option will become "
         "invalid in version 1.0.0"
     )
@@ -703,8 +776,8 @@ def test_deprecated_with_replacement_key_and_invalidation_version(
     with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
     assert str(exc_info.value) == (
-        "The 'mars' option (with value 'True') is deprecated, "
-        "please replace it with 'jupiter'. This option will become "
+        "The 'mars' option is deprecated, "
+        "please replace it with 'jupiter'. This option became "
         "invalid in version 0.1.0"
     )
 
@@ -725,8 +798,7 @@ def test_deprecated_with_default(caplog, schema):
     assert len(caplog.records) == 1
     assert caplog.records[0].name == __name__
     assert (
-        "The 'mars' option (with value 'True') is deprecated, "
-        "please remove it from your configuration"
+        "The 'mars' option is deprecated, please remove it from your configuration"
     ) in caplog.text
     assert test_data == output
 
@@ -759,8 +831,7 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert (
-        "The 'mars' option (with value 'True') is deprecated, "
-        "please replace it with 'jupiter'"
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
     assert {"jupiter": True} == output
 
@@ -792,8 +863,7 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     output = deprecated_schema_with_default(test_data.copy())
     assert len(caplog.records) == 1
     assert (
-        "The 'mars' option (with value 'True') is deprecated, "
-        "please replace it with 'jupiter'"
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
     assert {"jupiter": True} == output
 
@@ -828,7 +898,7 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert (
-        "The 'mars' option (with value 'True') is deprecated, "
+        "The 'mars' option is deprecated, "
         "please replace it with 'jupiter'. This option will become "
         "invalid in version 1.0.0"
     ) in caplog.text
@@ -855,8 +925,8 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
     with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
     assert str(exc_info.value) == (
-        "The 'mars' option (with value 'True') is deprecated, "
-        "please replace it with 'jupiter'. This option will become "
+        "The 'mars' option is deprecated, "
+        "please replace it with 'jupiter'. This option became "
         "invalid in version 0.1.0"
     )
 
@@ -1066,3 +1136,24 @@ def test_script(caplog):
             cv.script_action(data)
 
         assert msg in str(excinfo.value)
+
+
+def test_whitespace():
+    """Test whitespace validation."""
+    schema = vol.Schema(cv.whitespace)
+
+    for value in (
+        None,
+        "" "T",
+        "negative",
+        "lock",
+        "tr  ue",
+        [],
+        [1, 2],
+        {"one": "two"},
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("  ", "   "):
+        assert schema(value)

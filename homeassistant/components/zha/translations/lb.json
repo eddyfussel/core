@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Pad zum seriellen Apparat",
-                    "radio_type": "Typ vun Radio",
-                    "usb_path": "Pad zum USB Apparat"
+                    "path": "Pad zum seriellen Apparat"
                 },
                 "description": "Serielle Port fir Zigbee Radio auswielen",
                 "title": "ZHA"
@@ -67,6 +65,7 @@
             "device_dropped": "Apparat gefall",
             "device_flipped": "Apparat \u00ebmgedr\u00e9int \"{subtype}\"",
             "device_knocked": "Apparat geklappt \"{subtype}\"",
+            "device_offline": "Apparat net ereechbar",
             "device_rotated": "Apparat gedr\u00e9int \"{subtype}\"",
             "device_shaken": "Apparat ger\u00ebselt",
             "device_slid": "Apparat gerutscht \"{subtype}\"",

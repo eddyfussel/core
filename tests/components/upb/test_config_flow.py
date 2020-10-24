@@ -1,9 +1,9 @@
 """Test the UPB Control config flow."""
 
-from asynctest import MagicMock, PropertyMock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.upb.const import DOMAIN
+
+from tests.async_mock import MagicMock, PropertyMock, patch
 
 
 def mocked_upb(sync_complete=True, config_ok=True):
@@ -107,7 +107,7 @@ async def test_form_user_with_already_configured(hass):
     _ = await valid_tcp_flow(hass)
     result2 = await valid_tcp_flow(hass)
     assert result2["type"] == "abort"
-    assert result2["reason"] == "address_already_configured"
+    assert result2["reason"] == "already_configured"
     await hass.async_block_till_done()
 
 

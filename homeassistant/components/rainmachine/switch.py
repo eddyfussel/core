@@ -22,7 +22,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_NEXT_RUN = "next_run"
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
 ATTR_CURRENT_CYCLE = "current_cycle"
@@ -30,6 +29,7 @@ ATTR_CYCLES = "cycles"
 ATTR_DELAY = "delay"
 ATTR_DELAY_ON = "delay_on"
 ATTR_FIELD_CAPACITY = "field_capacity"
+ATTR_NEXT_RUN = "next_run"
 ATTR_NO_CYCLES = "number_of_cycles"
 ATTR_PRECIP_RATE = "sprinkler_head_precipitation_rate"
 ATTR_RESTRICTIONS = "restrictions"
@@ -39,12 +39,13 @@ ATTR_SOIL_TYPE = "soil_type"
 ATTR_SPRINKLER_TYPE = "sprinkler_head_type"
 ATTR_STATUS = "status"
 ATTR_SUN_EXPOSURE = "sun_exposure"
+ATTR_TIME_REMAINING = "time_remaining"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-PROGRAM_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
+RUN_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
 
 SOIL_TYPE_MAP = {
     0: "Not Set",
@@ -232,7 +233,7 @@ class RainMachineProgram(RainMachineSwitch):
                 ATTR_ID: self._switch_data["uid"],
                 ATTR_NEXT_RUN: next_run,
                 ATTR_SOAK: self._switch_data.get("soak"),
-                ATTR_STATUS: PROGRAM_STATUS_MAP[self._switch_data["status"]],
+                ATTR_STATUS: RUN_STATUS_MAP[self._switch_data["status"]],
                 ATTR_ZONES: ", ".join(z["name"] for z in self.zones),
             }
         )
@@ -289,10 +290,11 @@ class RainMachineZone(RainMachineSwitch):
 
         self._attrs.update(
             {
-                ATTR_ID: self._switch_data["uid"],
+                ATTR_STATUS: RUN_STATUS_MAP[self._switch_data["state"]],
                 ATTR_AREA: details.get("waterSense").get("area"),
                 ATTR_CURRENT_CYCLE: self._switch_data.get("cycle"),
                 ATTR_FIELD_CAPACITY: details.get("waterSense").get("fieldCapacity"),
+                ATTR_ID: self._switch_data["uid"],
                 ATTR_NO_CYCLES: self._switch_data.get("noOfCycles"),
                 ATTR_PRECIP_RATE: details.get("waterSense").get("precipitationRate"),
                 ATTR_RESTRICTIONS: self._switch_data.get("restriction"),
@@ -300,6 +302,7 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(details.get("sun")),
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(details.get("group_id")),
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(details.get("sun")),
+                ATTR_TIME_REMAINING: self._switch_data.get("remaining"),
                 ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(self._switch_data.get("type")),
             }
         )

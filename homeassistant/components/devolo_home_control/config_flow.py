@@ -30,12 +30,17 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data_schema = {
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
-            vol.Required(CONF_HOMECONTROL, default=DEFAULT_MPRM): str,
         }
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
+        if self.show_advanced_options:
+            self.data_schema = {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
+                vol.Required(CONF_HOMECONTROL, default=DEFAULT_MPRM): str,
+            }
         if user_input is None:
             return self._show_form(user_input)
         user = user_input[CONF_USERNAME]
@@ -46,13 +51,17 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mydevolo = Mydevolo()
         mydevolo.user = user
         mydevolo.password = password
-        mydevolo.url = user_input[CONF_MYDEVOLO]
-        mydevolo.mprm = user_input[CONF_HOMECONTROL]
+        if self.show_advanced_options:
+            mydevolo.url = user_input[CONF_MYDEVOLO]
+            mprm = user_input[CONF_HOMECONTROL]
+        else:
+            mydevolo.url = DEFAULT_MYDEVOLO
+            mprm = DEFAULT_MPRM
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
         if not credentials_valid:
-            return self._show_form({"base": "invalid_credentials"})
+            return self._show_form({"base": "invalid_auth"})
         _LOGGER.debug("Credentials valid")
         gateway_ids = await self.hass.async_add_executor_job(mydevolo.get_gateway_ids)
         await self.async_set_unique_id(gateway_ids[0])
@@ -64,7 +73,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: password,
                 CONF_USERNAME: user,
                 CONF_MYDEVOLO: mydevolo.url,
-                CONF_HOMECONTROL: mydevolo.mprm,
+                CONF_HOMECONTROL: mprm,
             },
         )
 
